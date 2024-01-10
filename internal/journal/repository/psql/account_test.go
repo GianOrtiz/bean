@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/journal"
 	"github.com/GianOrtiz/bean/pkg/money"
 )
@@ -15,12 +16,13 @@ const (
 )
 
 func TestShouldCreateNewJournalAccount(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	dbConn, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("could not stablish a new connection with database mock: %v", err)
 	}
-	defer db.Close()
+	defer dbConn.Close()
 
+	db := db.NewSqlDB(dbConn)
 	repository := NewPSQLJournalAccountRepository(db)
 
 	stmt := mock.ExpectPrepare("INSERT INTO journal_account")
@@ -36,12 +38,13 @@ func TestShouldCreateNewJournalAccount(t *testing.T) {
 }
 
 func TestShouldRetrieveJournalAccountByID(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	dbConn, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("could not stablish a new connection with database mock: %v", err)
 	}
-	defer db.Close()
+	defer dbConn.Close()
 
+	db := db.NewSqlDB(dbConn)
 	repository := NewPSQLJournalAccountRepository(db)
 
 	rows := sqlmock.NewRows([]string{"id", "created_at", "balance"}).
@@ -67,12 +70,13 @@ func TestShouldRetrieveJournalAccountByID(t *testing.T) {
 }
 
 func TestShouldUpdateJournalAccountData(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	dbConn, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("could not stablish a new connection with database mock: %v", err)
 	}
-	defer db.Close()
+	defer dbConn.Close()
 
+	db := db.NewSqlDB(dbConn)
 	repository := NewPSQLJournalAccountRepository(db)
 
 	updatedBalanceJournalAccountCents := 1000

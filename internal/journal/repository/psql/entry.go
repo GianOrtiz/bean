@@ -1,17 +1,16 @@
 package psql
 
 import (
-	"database/sql"
-
+	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/journal"
 	"github.com/GianOrtiz/bean/pkg/money"
 )
 
 type psqlJournalEntryRepository struct {
-	conn *sql.DB
+	conn db.Queryer
 }
 
-func NewPSQLJournalEntryRepository(db *sql.DB) journal.EntryRepository {
+func NewPSQLJournalEntryRepository(db db.DBConn) journal.EntryRepository {
 	return &psqlJournalEntryRepository{conn: db}
 }
 
@@ -75,4 +74,8 @@ func (r *psqlJournalEntryRepository) GetByJournalAccountID(journalAccountID stri
 		entries = append(entries, &entry)
 	}
 	return entries, nil
+}
+
+func (r *psqlJournalEntryRepository) EnableTransaction(tx db.DBTx) {
+	r.conn = tx
 }

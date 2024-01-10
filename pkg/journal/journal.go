@@ -3,6 +3,7 @@ package journal
 import (
 	"time"
 
+	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/money"
 )
 
@@ -38,6 +39,7 @@ type EntryRepository interface {
 	Create(transactionID string, journalAccountID string, amount money.Money) error
 	// GetByJournalAccountID retrieves journal entries from a journal account.
 	GetByJournalAccountID(journalAccountID string) ([]*Entry, error)
+	db.TXEnabler
 }
 
 // AccountRepository is the abstract representation of data access
@@ -49,6 +51,7 @@ type AccountRepository interface {
 	GetByID(id string) (*Account, error)
 	// UpdateBalance updates a journal account.
 	Update(account *Account) error
+	db.TXEnabler
 }
 
 // AccountUseCase is the representation of use cases for the journal
@@ -58,5 +61,5 @@ type AccountUseCase interface {
 	// a transaction model.
 	Transact(fromAccountID string, toAccountID string, amount money.Money) error
 	// FindEntries retrieve all journal entries associated to an account.
-	FindEntries(journalAccountID string) error
+	FindEntries(journalAccountID string) ([]*Entry, error)
 }

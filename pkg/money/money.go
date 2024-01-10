@@ -18,3 +18,15 @@ func FromFloat(number float64) Money {
 func FromCents(cents int) Money {
 	return Money(cents)
 }
+
+func Negative(m Money) Money {
+	return FromCents(-1 * ToCents(m))
+}
+
+func Minus(m1 Money, m2 Money) Money {
+	return FromCents(ToCents(m1) - ToCents(m2))
+}
+
+func Plus(m1 Money, m2 Money) Money {
+	return FromCents(ToCents(m1) + ToCents(m2))
+}
