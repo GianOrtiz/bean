@@ -107,17 +107,17 @@ func (m *MockAccountRepository) EXPECT() *MockAccountRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockAccountRepository) Create(id string, initialBalance money.Money, date time.Time) error {
+func (m *MockAccountRepository) Create(account journal.Account) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", id, initialBalance, date)
+	ret := m.ctrl.Call(m, "Create", account)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockAccountRepositoryMockRecorder) Create(id, initialBalance, date any) *gomock.Call {
+func (mr *MockAccountRepositoryMockRecorder) Create(account any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountRepository)(nil).Create), id, initialBalance, date)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountRepository)(nil).Create), account)
 }
 
 // EnableTransaction mocks base method.

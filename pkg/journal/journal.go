@@ -17,6 +17,8 @@ type Account struct {
 	CreatedAt time.Time `json:"createdAt"`
 	// Balance is the current balance of the account.
 	Balance money.Money `json:"balance"`
+	// UserID is the user identification owner of this account.
+	UserID int `json:"userId"`
 }
 
 type Entry struct {
@@ -48,7 +50,7 @@ type EntryRepository interface {
 // to journal account.
 type AccountRepository interface {
 	// Create creates a new journal account.
-	Create(id string, initialBalance money.Money, date time.Time) error
+	Create(account Account) error
 	// GetByID retrieves a journal account by its id.
 	GetByID(id string) (*Account, error)
 	// GetByUserID retrieves a journal account by its user id.

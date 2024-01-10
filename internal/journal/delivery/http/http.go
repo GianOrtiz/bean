@@ -2,9 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
-	"strings"
 
 	journalUseCase "github.com/GianOrtiz/bean/internal/journal/usecase"
 	"github.com/GianOrtiz/bean/pkg/journal"
@@ -34,7 +32,6 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	log.Printf("transaction required by user %d\n", userID)
 
 	var body transactBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -48,7 +45,6 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 		return
 	}
 
-	log.Printf("transaction being made with values, %+v\n", body)
 	err := h.journalUseCase.Transact(body.FromUser, body.ToUser, money.FromCents(body.ValueAsCents))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -57,13 +53,24 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 }
 
 func (h *JournalHandler) FindAccountEntries(w http.ResponseWriter, r *http.Request, session *sessions.Session) {
-	journalAccountID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/accounts/"), "/entries")
-	if journalAccountID == "" {
-		w.WriteHeader(http.StatusBadRequest)
+	userIDStr, ok := session.Values["user_id"]
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	entries, err := h.journalUseCase.FindEntries(journalAccountID)
+	userID := userIDStr.(int)
+	account, err := h.journalUseCase.FindUserAccount(userID)
+	if err != nil {
+		if err == journalUseCase.JournalAccountNotFoundErr {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	entries, err := h.journalUseCase.FindEntries(account.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -55,7 +55,7 @@ func New() (*Server, error) {
 		journalAccountRepository, journalEntryRepository, db)
 	journalAccountHTTPHandler := journalHTTP.NewJournalHandler(journalAccountUseCase)
 
-	mux.HandleFunc("/accounts", authHandler.Authorize(journalAccountHTTPHandler.FindAccountEntries))
+	mux.HandleFunc("/users/accounts/entries", authHandler.Authorize(journalAccountHTTPHandler.FindAccountEntries))
 	mux.HandleFunc("/transact", authHandler.Authorize(journalAccountHTTPHandler.Transact))
 	mux.HandleFunc("/users/accounts", authHandler.Authorize(journalAccountHTTPHandler.FindUserAccount))
 

@@ -109,7 +109,13 @@ func (uc *journalAccountUseCase) findJournalAccountOrCreateByUserID(userID int, 
 	fromAccount, err := uc.journalAccountRepository.GetByUserID(userID)
 	if err != nil {
 		journalAccountID := uuid.NewString()
-		if err := uc.journalAccountRepository.Create(journalAccountID, money.FromCents(0), time); err != nil {
+		journalAccount := journal.Account{
+			ID:        journalAccountID,
+			CreatedAt: time,
+			Balance:   money.FromCents(0),
+			UserID:    userID,
+		}
+		if err := uc.journalAccountRepository.Create(journalAccount); err != nil {
 			return nil, err
 		}
 		fromAccount, err = uc.journalAccountRepository.GetByID(journalAccountID)
