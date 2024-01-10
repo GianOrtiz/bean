@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"errors"
+	"log"
 	"time"
 
 	"github.com/GianOrtiz/bean/pkg/db"
@@ -23,7 +25,24 @@ func NewJournalAccountUseCase(journalAccountRepository journal.AccountRepository
 	}
 }
 
-func (uc *journalAccountUseCase) Transact(fromUserID, toUserID int, amount money.Money) (err error) {
+func (uc *journalAccountUseCase) Transact(entries []journal.TransactEntry) (err error) {
+	sumOfEntries := 0
+	var userIDs []int
+	for _, entry := range entries {
+		sumOfEntries += money.ToCents(entry.Amount)
+
+		for _, userID := range userIDs {
+			if entry.UserID == userID {
+				return errors.New("repeated user in entries")
+			}
+		}
+		userIDs = append(userIDs, entry.UserID)
+	}
+
+	if sumOfEntries != 0 {
+		return errors.New("sum of entries must be equal to zero")
+	}
+
 	dbTx, err := uc.db.Begin()
 	if err != nil {
 		return err
@@ -40,49 +59,23 @@ func (uc *journalAccountUseCase) Transact(fromUserID, toUserID int, amount money
 	uc.journalEntryRepository.EnableTransaction(dbTx)
 
 	now := time.Now()
-	fromAccount, err := uc.findJournalAccountOrCreateByUserID(fromUserID, now)
-	if err != nil {
-		return err
-	}
-
-	toAccount, err := uc.findJournalAccountOrCreateByUserID(toUserID, now)
-	if err != nil {
-		return err
-	}
-
-	fromAccount.Balance = money.Minus(fromAccount.Balance, amount)
-	toAccount.Balance = money.Plus(toAccount.Balance, amount)
-
-	fromAccountEntry := journal.Entry{
-		JournalAccountID: fromAccount.ID,
-		Amount:           money.Negative(amount),
-	}
-	toAccountEntry := journal.Entry{
-		JournalAccountID: toAccount.ID,
-		Amount:           amount,
-	}
 	transactionID := uuid.NewString()
+	for _, entry := range entries {
+		log.Printf("%+v\n", entry)
+		account, err := uc.findJournalAccountOrCreateFromTransactEntry(entry, now)
+		if err != nil {
+			return err
+		}
+		account.Balance = money.Plus(account.Balance, entry.Amount)
+		err = uc.journalAccountRepository.Update(account)
+		if err != nil {
+			return err
+		}
 
-	err = uc.journalEntryRepository.
-		Create(transactionID, fromAccountEntry.JournalAccountID, fromAccountEntry.Amount, now)
-	if err != nil {
-		return err
-	}
-
-	err = uc.journalEntryRepository.
-		Create(transactionID, toAccountEntry.JournalAccountID, toAccountEntry.Amount, now)
-	if err != nil {
-		return err
-	}
-
-	err = uc.journalAccountRepository.Update(fromAccount)
-	if err != nil {
-		return err
-	}
-
-	err = uc.journalAccountRepository.Update(toAccount)
-	if err != nil {
-		return err
+		err = uc.journalEntryRepository.Create(transactionID, account.ID, entry.Amount, now)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -105,15 +98,15 @@ func (uc *journalAccountUseCase) FindEntries(journalAccountID string) ([]*journa
 	return entries, nil
 }
 
-func (uc *journalAccountUseCase) findJournalAccountOrCreateByUserID(userID int, time time.Time) (*journal.Account, error) {
-	fromAccount, err := uc.journalAccountRepository.GetByUserID(userID)
+func (uc *journalAccountUseCase) findJournalAccountOrCreateFromTransactEntry(entry journal.TransactEntry, time time.Time) (*journal.Account, error) {
+	fromAccount, err := uc.journalAccountRepository.GetByUserID(entry.UserID)
 	if err != nil {
 		journalAccountID := uuid.NewString()
 		journalAccount := journal.Account{
 			ID:        journalAccountID,
 			CreatedAt: time,
 			Balance:   money.FromCents(0),
-			UserID:    userID,
+			UserID:    entry.UserID,
 		}
 		if err := uc.journalAccountRepository.Create(journalAccount); err != nil {
 			return nil, err

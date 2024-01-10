@@ -6,7 +6,6 @@ import (
 
 	journalUseCase "github.com/GianOrtiz/bean/internal/journal/usecase"
 	"github.com/GianOrtiz/bean/pkg/journal"
-	"github.com/GianOrtiz/bean/pkg/money"
 	"github.com/gorilla/sessions"
 )
 
@@ -21,9 +20,7 @@ func NewJournalHandler(journalUseCase journal.AccountUseCase) *JournalHandler {
 }
 
 type transactBody struct {
-	FromUser     int `json:"from_user"`
-	ToUser       int `json:"to_user"`
-	ValueAsCents int `json:"value_as_cents"`
+	Entries []journal.TransactEntry `json:"entries"`
 }
 
 func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, session *sessions.Session) {
@@ -40,12 +37,20 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 	}
 	defer r.Body.Close()
 
-	if body.FromUser != userID.(int) && body.ToUser != userID.(int) {
+	userIDInEntries := false
+	for _, entry := range body.Entries {
+		if entry.UserID == userID.(int) {
+			userIDInEntries = true
+			break
+		}
+	}
+
+	if !userIDInEntries {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	err := h.journalUseCase.Transact(body.FromUser, body.ToUser, money.FromCents(body.ValueAsCents))
+	err := h.journalUseCase.Transact(body.Entries)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

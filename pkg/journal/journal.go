@@ -60,12 +60,19 @@ type AccountRepository interface {
 	db.TXEnabler
 }
 
+type TransactEntry struct {
+	// Amount is the amount on the transaction of this entry.
+	Amount money.Money `json:"amount"`
+	// UserID is the user identification associated to this entry.
+	UserID int `json:"user_id"`
+}
+
 // AccountUseCase is the representation of use cases for the journal
 // account data.
 type AccountUseCase interface {
-	// Transact transacts an amount from one account to another, following
-	// a transaction model.
-	Transact(fromUserID, toUserID int, amount money.Money) error
+	// Transact transacts the given entries that must sum up to zero between the
+	// entries. All given entries will belong to the same transaction.
+	Transact(entries []TransactEntry) error
 	// FindEntries retrieve all journal entries associated to an account.
 	FindEntries(journalAccountID string) ([]*Entry, error)
 	// FindUserAccount retrieve the current user account information.

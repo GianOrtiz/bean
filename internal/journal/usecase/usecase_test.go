@@ -92,7 +92,86 @@ func TestShouldThrowErrorIfAccountIsNotFoundWhenFindEntries(t *testing.T) {
 	}
 }
 
+func TestShouldErrorWhenEntriesDoNotSumUpToZeroOnTransact(t *testing.T) {
+	entries := []journal.TransactEntry{
+		{
+			Amount: money.FromCents(200),
+			UserID: 1,
+		},
+		{
+			Amount: money.FromCents(0),
+			UserID: 2,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	journalAccountRepository := mock_journal.NewMockAccountRepository(ctrl)
+	journalEntryRepository := mock_journal.NewMockEntryRepository(ctrl)
+	dbConn, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not stablish a new connection with database mock: %v", err)
+	}
+	defer dbConn.Close()
+
+	db := db.NewSqlDB(dbConn)
+	usecase := journalAccountUseCase{
+		journalAccountRepository: journalAccountRepository,
+		journalEntryRepository:   journalEntryRepository,
+		db:                       db,
+	}
+
+	err = usecase.Transact(entries)
+	if err == nil {
+		t.Error("expected an error, received nil")
+	}
+}
+
+func TestShouldErrorWhenUserIsRepeatedInEntriesOnTransact(t *testing.T) {
+	entries := []journal.TransactEntry{
+		{
+			Amount: money.FromCents(200),
+			UserID: 1,
+		},
+		{
+			Amount: money.FromCents(-200),
+			UserID: 1,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	journalAccountRepository := mock_journal.NewMockAccountRepository(ctrl)
+	journalEntryRepository := mock_journal.NewMockEntryRepository(ctrl)
+	dbConn, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not stablish a new connection with database mock: %v", err)
+	}
+	defer dbConn.Close()
+
+	db := db.NewSqlDB(dbConn)
+	usecase := journalAccountUseCase{
+		journalAccountRepository: journalAccountRepository,
+		journalEntryRepository:   journalEntryRepository,
+		db:                       db,
+	}
+
+	err = usecase.Transact(entries)
+	if err == nil {
+		t.Error("expected an error, received nil")
+	}
+}
+
 func TestShouldTransact(t *testing.T) {
+	entries := []journal.TransactEntry{
+		{
+			Amount: money.FromCents(-1 * TRANSACTION_AMOUNT_CENTS),
+			UserID: FROM_USER_ID,
+		},
+		{
+			Amount: money.FromCents(TRANSACTION_AMOUNT_CENTS),
+			UserID: TO_USER_ID,
+		},
+	}
+
 	ctrl := gomock.NewController(t)
 	journalAccountRepository := mock_journal.NewMockAccountRepository(ctrl)
 	journalEntryRepository := mock_journal.NewMockEntryRepository(ctrl)
@@ -175,7 +254,7 @@ func TestShouldTransact(t *testing.T) {
 				money.FromCents(TO_ACCOUNT_BALANCE_CENTS),
 				money.FromCents(TRANSACTION_AMOUNT_CENTS)),
 		})
-	err = usecase.Transact(FROM_USER_ID, TO_USER_ID, money.FromCents(TRANSACTION_AMOUNT_CENTS))
+	err = usecase.Transact(entries)
 	if err != nil {
 		t.Errorf("expected to receive nil error on transact, received: %v", err)
 	}
