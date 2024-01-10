@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/GianOrtiz/bean/internal/auth"
 	"github.com/GianOrtiz/bean/pkg/user"
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -49,6 +50,7 @@ func (uc *userUseCase) Login(email, password string, session *sessions.Session) 
 	}
 
 	session.Values["user_id"] = u.ID
+	session.Values[auth.AUTHORIZATION_KEY] = true
 	return nil
 }
 

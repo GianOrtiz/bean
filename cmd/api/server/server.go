@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/GianOrtiz/bean/internal/auth"
 	"github.com/GianOrtiz/bean/internal/config"
 	"github.com/GianOrtiz/bean/internal/db"
 	userHTTP "github.com/GianOrtiz/bean/internal/user/delivery/http"
@@ -31,14 +32,18 @@ func New() (*Server, error) {
 
 	mux := http.NewServeMux()
 	db := domainDB.NewSqlDB(dbConn)
-	userRepository := psql.NewPSQLUserRepositoryRepository(db)
+
 	sessionStore := sessions.NewFilesystemStore("./temp", []byte{1, 2, 3, 4, 5, 6, 7, 8})
+
+	authHandler := auth.NewHandler(sessionStore)
+
+	userRepository := psql.NewPSQLUserRepositoryRepository(db)
 	userUseCase := userUseCase.NewUserUseCase(userRepository)
 	userHTTPHandler := userHTTP.New(userUseCase, sessionStore)
 
 	mux.HandleFunc("/login", userHTTPHandler.Login)
 	mux.HandleFunc("/register", userHTTPHandler.Register)
-	mux.HandleFunc("/users", userHTTPHandler.GetByID)
+	mux.HandleFunc("/users", authHandler.Authorize(userHTTPHandler.GetByID))
 
 	return &Server{
 		Mux:    mux,

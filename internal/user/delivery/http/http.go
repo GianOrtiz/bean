@@ -3,8 +3,8 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
+	"github.com/GianOrtiz/bean/internal/auth"
 	"github.com/GianOrtiz/bean/internal/user/usecase"
 	"github.com/GianOrtiz/bean/pkg/user"
 	"github.com/go-playground/validator/v10"
@@ -53,20 +53,14 @@ func (h *UserHTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *UserHTTPHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Query().Get("id")
-	if idStr == "" {
-		w.WriteHeader(http.StatusBadRequest)
+func (h *UserHTTPHandler) GetByID(w http.ResponseWriter, r *http.Request, session *sessions.Session) {
+	userID, ok := session.Values["user_id"]
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	u, err := h.usecase.GetUser(id)
+	u, err := h.usecase.GetUser(userID.(int))
 	if err != nil {
 		if err == usecase.UserNotFoundErr {
 			w.WriteHeader(http.StatusNotFound)
@@ -89,7 +83,7 @@ func (h *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.sessionsStore.Get(r, "uat")
+	session, err := h.sessionsStore.Get(r, auth.AUTH_TOKEN_NAME)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
