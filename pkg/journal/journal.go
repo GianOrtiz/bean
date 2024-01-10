@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./journal.go -destination=mock/journal.go
+
 package journal
 
 import (

@@ -1,8 +1,6 @@
 package usecase
 
 import (
-	"errors"
-
 	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/journal"
 	"github.com/GianOrtiz/bean/pkg/money"
@@ -89,7 +87,7 @@ func (uc *journalAccountUseCase) Transact(fromAccountID string, toAccountID stri
 func (uc *journalAccountUseCase) FindEntries(journalAccountID string) ([]*journal.Entry, error) {
 	_, err := uc.journalAccountRepository.GetByID(journalAccountID)
 	if err != nil {
-		return nil, errors.New("journal account not found")
+		return nil, JournalAccountNotFoundErr
 	}
 
 	entries, err := uc.journalEntryRepository.GetByJournalAccountID(journalAccountID)
