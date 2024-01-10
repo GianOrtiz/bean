@@ -5,10 +5,10 @@ import (
 )
 
 type Queryer interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Query(query string, args ...any) (*sql.Rows, error)
 	Prepare(query string) (*sql.Stmt, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
 }
 
 var (
@@ -25,15 +25,15 @@ func NewSqlDB(sqlDB *sql.DB) DBConn {
 	}
 }
 
-func (db DBConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (db DBConn) Exec(query string, args ...any) (sql.Result, error) {
 	return db.DB.Exec(query, args...)
 }
 
-func (db DBConn) Query(query string, args ...interface{}) (*sql.Rows, error) {
+func (db DBConn) Query(query string, args ...any) (*sql.Rows, error) {
 	return db.DB.Query(query, args...)
 }
 
-func (db DBConn) QueryRow(query string, args ...interface{}) *sql.Row {
+func (db DBConn) QueryRow(query string, args ...any) *sql.Row {
 	return db.DB.QueryRow(query, args...)
 }
 
