@@ -138,18 +138,17 @@ func (mr *MockUseCaseMockRecorder) GetUser(id any) *gomock.Call {
 }
 
 // Login mocks base method.
-func (m *MockUseCase) Login(email, password string) (*sessions.Session, error) {
+func (m *MockUseCase) Login(email, password string, session *sessions.Session) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", email, password)
-	ret0, _ := ret[0].(*sessions.Session)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Login", email, password, session)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Login indicates an expected call of Login.
-func (mr *MockUseCaseMockRecorder) Login(email, password any) *gomock.Call {
+func (mr *MockUseCaseMockRecorder) Login(email, password, session any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUseCase)(nil).Login), email, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUseCase)(nil).Login), email, password, session)
 }
 
 // Register mocks base method.

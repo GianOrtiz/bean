@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -33,6 +34,7 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	log.Printf("transaction required by user %d\n", userID)
 
 	var body transactBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -46,6 +48,7 @@ func (h *JournalHandler) Transact(w http.ResponseWriter, r *http.Request, sessio
 		return
 	}
 
+	log.Printf("transaction being made with values, %+v\n", body)
 	err := h.journalUseCase.Transact(body.FromUser, body.ToUser, money.FromCents(body.ValueAsCents))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

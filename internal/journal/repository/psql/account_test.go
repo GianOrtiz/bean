@@ -26,9 +26,10 @@ func TestShouldCreateNewJournalAccount(t *testing.T) {
 	repository := NewPSQLJournalAccountRepository(db)
 
 	stmt := mock.ExpectPrepare("INSERT INTO journal_account")
-	stmt.ExpectExec().WithArgs(JOURNAL_ACCOUNT_ID, INITIAL_BALANCE_CENTS).WillReturnResult(sqlmock.NewResult(1, 1))
+	now := time.Now()
+	stmt.ExpectExec().WithArgs(JOURNAL_ACCOUNT_ID, INITIAL_BALANCE_CENTS, now).WillReturnResult(sqlmock.NewResult(1, 1))
 
-	if err := repository.Create(JOURNAL_ACCOUNT_ID, money.FromCents(INITIAL_BALANCE_CENTS)); err != nil {
+	if err := repository.Create(JOURNAL_ACCOUNT_ID, money.FromCents(INITIAL_BALANCE_CENTS), now); err != nil {
 		t.Errorf("expected no error, received: %v", err)
 	}
 

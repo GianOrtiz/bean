@@ -38,7 +38,7 @@ type Entry struct {
 // journal entry.
 type EntryRepository interface {
 	// Create creates a new journal entry.
-	Create(transactionID string, journalAccountID string, amount money.Money) error
+	Create(transactionID, journalAccountID string, amount money.Money, date time.Time) error
 	// GetByJournalAccountID retrieves journal entries from a journal account.
 	GetByJournalAccountID(journalAccountID string) ([]*Entry, error)
 	db.TXEnabler
@@ -48,7 +48,7 @@ type EntryRepository interface {
 // to journal account.
 type AccountRepository interface {
 	// Create creates a new journal account.
-	Create(id string, initialBalance money.Money) error
+	Create(id string, initialBalance money.Money, date time.Time) error
 	// GetByID retrieves a journal account by its id.
 	GetByID(id string) (*Account, error)
 	// GetByUserID retrieves a journal account by its user id.

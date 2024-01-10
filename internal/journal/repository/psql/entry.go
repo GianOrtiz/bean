@@ -1,6 +1,8 @@
 package psql
 
 import (
+	"time"
+
 	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/journal"
 	"github.com/GianOrtiz/bean/pkg/money"
@@ -14,25 +16,27 @@ func NewPSQLJournalEntryRepository(db db.DBConn) journal.EntryRepository {
 	return &psqlJournalEntryRepository{conn: db}
 }
 
-func (r *psqlJournalEntryRepository) Create(transactionID string, journalAccountID string, amount money.Money) error {
+func (r *psqlJournalEntryRepository) Create(transactionID string, journalAccountID string, amount money.Money, time time.Time) error {
 	query := `
 		INSERT INTO
 			journal_entry(
 				transaction_id,
 				journal_account_id,
-				amount
+				amount,
+				created_at
 			)
 		VALUES(
 			$1,
 			$2,
-			$3
+			$3,
+			$4
 		)
 	`
 	stmt, err := r.conn.Prepare(query)
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(transactionID, journalAccountID, money.ToCents(amount))
+	_, err = stmt.Exec(transactionID, journalAccountID, money.ToCents(amount), time)
 	if err != nil {
 		return err
 	}

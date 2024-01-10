@@ -124,7 +124,7 @@ func TestShouldTransact(t *testing.T) {
 		Return(nil, sql.ErrNoRows)
 	journalAccountRepository.
 		EXPECT().
-		Create(gomock.Any(), money.FromCents(0))
+		Create(gomock.Any(), money.FromCents(0), gomock.Any())
 	journalAccountRepository.
 		EXPECT().
 		GetByID(gomock.Any()).
@@ -140,7 +140,7 @@ func TestShouldTransact(t *testing.T) {
 		Return(nil, sql.ErrNoRows)
 	journalAccountRepository.
 		EXPECT().
-		Create(gomock.Any(), money.FromCents(0))
+		Create(gomock.Any(), money.FromCents(0), gomock.Any())
 	journalAccountRepository.
 		EXPECT().
 		GetByID(gomock.Any()).
@@ -152,10 +152,10 @@ func TestShouldTransact(t *testing.T) {
 
 	journalEntryRepository.
 		EXPECT().
-		Create(gomock.Any(), FROM_ACCOUNT_ID, money.Negative(TRANSACTION_AMOUNT_CENTS))
+		Create(gomock.Any(), FROM_ACCOUNT_ID, money.Negative(TRANSACTION_AMOUNT_CENTS), gomock.Any())
 	journalEntryRepository.
 		EXPECT().
-		Create(gomock.Any(), TO_ACCOUNT_ID, money.FromCents(TRANSACTION_AMOUNT_CENTS))
+		Create(gomock.Any(), TO_ACCOUNT_ID, money.FromCents(TRANSACTION_AMOUNT_CENTS), gomock.Any())
 
 	journalAccountRepository.
 		EXPECT().

@@ -24,15 +24,17 @@ func TestShouldCreateJournalEntry(t *testing.T) {
 	db := db.NewSqlDB(dbConn)
 	repository := NewPSQLJournalEntryRepository(db)
 
+	now := time.Now()
 	stmt := mock.ExpectPrepare("INSERT INTO journal_entry")
 	stmt.ExpectExec().
-		WithArgs(TRANSACTION_ID, JOURNAL_ACCOUNT_ID, AMOUNT_TRANSACTION_CENTS).
+		WithArgs(TRANSACTION_ID, JOURNAL_ACCOUNT_ID, AMOUNT_TRANSACTION_CENTS, now).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	if err := repository.Create(
 		TRANSACTION_ID,
 		JOURNAL_ACCOUNT_ID,
 		money.FromCents(AMOUNT_TRANSACTION_CENTS),
+		now,
 	); err != nil {
 		t.Errorf("expected no error, received: %v", err)
 	}

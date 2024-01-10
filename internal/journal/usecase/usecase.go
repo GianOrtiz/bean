@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"time"
+
 	"github.com/GianOrtiz/bean/pkg/db"
 	"github.com/GianOrtiz/bean/pkg/journal"
 	"github.com/GianOrtiz/bean/pkg/money"
@@ -37,12 +39,13 @@ func (uc *journalAccountUseCase) Transact(fromUserID, toUserID int, amount money
 	uc.journalAccountRepository.EnableTransaction(dbTx)
 	uc.journalEntryRepository.EnableTransaction(dbTx)
 
-	fromAccount, err := uc.findJournalAccountOrCreateByUserID(fromUserID)
+	now := time.Now()
+	fromAccount, err := uc.findJournalAccountOrCreateByUserID(fromUserID, now)
 	if err != nil {
 		return err
 	}
 
-	toAccount, err := uc.findJournalAccountOrCreateByUserID(toUserID)
+	toAccount, err := uc.findJournalAccountOrCreateByUserID(toUserID, now)
 	if err != nil {
 		return err
 	}
@@ -61,13 +64,13 @@ func (uc *journalAccountUseCase) Transact(fromUserID, toUserID int, amount money
 	transactionID := uuid.NewString()
 
 	err = uc.journalEntryRepository.
-		Create(transactionID, fromAccountEntry.JournalAccountID, fromAccountEntry.Amount)
+		Create(transactionID, fromAccountEntry.JournalAccountID, fromAccountEntry.Amount, now)
 	if err != nil {
 		return err
 	}
 
 	err = uc.journalEntryRepository.
-		Create(transactionID, toAccountEntry.JournalAccountID, toAccountEntry.Amount)
+		Create(transactionID, toAccountEntry.JournalAccountID, toAccountEntry.Amount, now)
 	if err != nil {
 		return err
 	}
@@ -102,11 +105,11 @@ func (uc *journalAccountUseCase) FindEntries(journalAccountID string) ([]*journa
 	return entries, nil
 }
 
-func (uc *journalAccountUseCase) findJournalAccountOrCreateByUserID(userID int) (*journal.Account, error) {
+func (uc *journalAccountUseCase) findJournalAccountOrCreateByUserID(userID int, time time.Time) (*journal.Account, error) {
 	fromAccount, err := uc.journalAccountRepository.GetByUserID(userID)
 	if err != nil {
 		journalAccountID := uuid.NewString()
-		if err := uc.journalAccountRepository.Create(journalAccountID, money.FromCents(0)); err != nil {
+		if err := uc.journalAccountRepository.Create(journalAccountID, money.FromCents(0), time); err != nil {
 			return nil, err
 		}
 		fromAccount, err = uc.journalAccountRepository.GetByID(journalAccountID)
