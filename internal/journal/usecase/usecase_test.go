@@ -17,6 +17,8 @@ import (
 const (
 	JOURNAL_ACCOUNT_ID         = "b0a4d93d-b940-4ade-a359-7f9f131b3b1b"
 	FROM_ACCOUNT_ID            = "e126a63b-7e63-4367-a20f-b485cd8b5561"
+	FROM_USER_ID               = 1
+	TO_USER_ID                 = 2
 	FROM_ACCOUNT_BALANCE_CENTS = 1000
 	TO_ACCOUNT_ID              = "97526968-6976-411a-b425-708f8dd826d0"
 	TO_ACCOUNT_BALANCE_CENTS   = 2000
@@ -118,14 +120,14 @@ func TestShouldTransact(t *testing.T) {
 
 	journalAccountRepository.
 		EXPECT().
-		GetByID(FROM_ACCOUNT_ID).
+		GetByUserID(FROM_USER_ID).
 		Return(nil, sql.ErrNoRows)
 	journalAccountRepository.
 		EXPECT().
-		Create(FROM_ACCOUNT_ID, money.FromCents(0))
+		Create(gomock.Any(), money.FromCents(0))
 	journalAccountRepository.
 		EXPECT().
-		GetByID(FROM_ACCOUNT_ID).
+		GetByID(gomock.Any()).
 		Return(&journal.Account{
 			ID:        FROM_ACCOUNT_ID,
 			CreatedAt: now,
@@ -134,14 +136,14 @@ func TestShouldTransact(t *testing.T) {
 
 	journalAccountRepository.
 		EXPECT().
-		GetByID(TO_ACCOUNT_ID).
+		GetByUserID(TO_USER_ID).
 		Return(nil, sql.ErrNoRows)
 	journalAccountRepository.
 		EXPECT().
-		Create(TO_ACCOUNT_ID, money.FromCents(0))
+		Create(gomock.Any(), money.FromCents(0))
 	journalAccountRepository.
 		EXPECT().
-		GetByID(TO_ACCOUNT_ID).
+		GetByID(gomock.Any()).
 		Return(&journal.Account{
 			ID:        TO_ACCOUNT_ID,
 			CreatedAt: now,
@@ -173,7 +175,7 @@ func TestShouldTransact(t *testing.T) {
 				money.FromCents(TO_ACCOUNT_BALANCE_CENTS),
 				money.FromCents(TRANSACTION_AMOUNT_CENTS)),
 		})
-	err = usecase.Transact(FROM_ACCOUNT_ID, TO_ACCOUNT_ID, money.FromCents(TRANSACTION_AMOUNT_CENTS))
+	err = usecase.Transact(FROM_USER_ID, TO_USER_ID, money.FromCents(TRANSACTION_AMOUNT_CENTS))
 	if err != nil {
 		t.Errorf("expected to receive nil error on transact, received: %v", err)
 	}

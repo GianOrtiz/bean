@@ -7,8 +7,11 @@ import (
 	"github.com/GianOrtiz/bean/internal/auth"
 	"github.com/GianOrtiz/bean/internal/config"
 	"github.com/GianOrtiz/bean/internal/db"
+	journalHTTP "github.com/GianOrtiz/bean/internal/journal/delivery/http"
+	journalPSQL "github.com/GianOrtiz/bean/internal/journal/repository/psql"
+	journalUseCase "github.com/GianOrtiz/bean/internal/journal/usecase"
 	userHTTP "github.com/GianOrtiz/bean/internal/user/delivery/http"
-	"github.com/GianOrtiz/bean/internal/user/repository/psql"
+	userPSQL "github.com/GianOrtiz/bean/internal/user/repository/psql"
 	userUseCase "github.com/GianOrtiz/bean/internal/user/usecase"
 	domainDB "github.com/GianOrtiz/bean/pkg/db"
 	"github.com/gorilla/sessions"
@@ -37,13 +40,24 @@ func New() (*Server, error) {
 
 	authHandler := auth.NewHandler(sessionStore)
 
-	userRepository := psql.NewPSQLUserRepositoryRepository(db)
+	userRepository := userPSQL.NewPSQLUserRepositoryRepository(db)
 	userUseCase := userUseCase.NewUserUseCase(userRepository)
 	userHTTPHandler := userHTTP.New(userUseCase, sessionStore)
 
 	mux.HandleFunc("/login", userHTTPHandler.Login)
 	mux.HandleFunc("/register", userHTTPHandler.Register)
 	mux.HandleFunc("/users", authHandler.Authorize(userHTTPHandler.GetByID))
+
+	journalAccountRepository := journalPSQL.NewPSQLJournalAccountRepository(db)
+	journalEntryRepository := journalPSQL.NewPSQLJournalEntryRepository(db)
+
+	journalAccountUseCase := journalUseCase.NewJournalAccountUseCase(
+		journalAccountRepository, journalEntryRepository, db)
+	journalAccountHTTPHandler := journalHTTP.NewJournalHandler(journalAccountUseCase)
+
+	mux.HandleFunc("/accounts", authHandler.Authorize(journalAccountHTTPHandler.FindAccountEntries))
+	mux.HandleFunc("/transact", authHandler.Authorize(journalAccountHTTPHandler.Transact))
+	mux.HandleFunc("/users/accounts", authHandler.Authorize(journalAccountHTTPHandler.FindUserAccount))
 
 	return &Server{
 		Mux:    mux,

@@ -51,6 +51,8 @@ type AccountRepository interface {
 	Create(id string, initialBalance money.Money) error
 	// GetByID retrieves a journal account by its id.
 	GetByID(id string) (*Account, error)
+	// GetByUserID retrieves a journal account by its user id.
+	GetByUserID(userID int) (*Account, error)
 	// UpdateBalance updates a journal account.
 	Update(account *Account) error
 	db.TXEnabler
@@ -61,7 +63,9 @@ type AccountRepository interface {
 type AccountUseCase interface {
 	// Transact transacts an amount from one account to another, following
 	// a transaction model.
-	Transact(fromAccountID string, toAccountID string, amount money.Money) error
+	Transact(fromUserID, toUserID int, amount money.Money) error
 	// FindEntries retrieve all journal entries associated to an account.
 	FindEntries(journalAccountID string) ([]*Entry, error)
+	// FindUserAccount retrieve the current user account information.
+	FindUserAccount(userID int) (*Account, error)
 }

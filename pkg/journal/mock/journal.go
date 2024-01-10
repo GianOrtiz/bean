@@ -146,6 +146,21 @@ func (mr *MockAccountRepositoryMockRecorder) GetByID(id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockAccountRepository)(nil).GetByID), id)
 }
 
+// GetByUserID mocks base method.
+func (m *MockAccountRepository) GetByUserID(userID int) (*journal.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByUserID", userID)
+	ret0, _ := ret[0].(*journal.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByUserID indicates an expected call of GetByUserID.
+func (mr *MockAccountRepositoryMockRecorder) GetByUserID(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUserID", reflect.TypeOf((*MockAccountRepository)(nil).GetByUserID), userID)
+}
+
 // Update mocks base method.
 func (m *MockAccountRepository) Update(account *journal.Account) error {
 	m.ctrl.T.Helper()
@@ -198,16 +213,31 @@ func (mr *MockAccountUseCaseMockRecorder) FindEntries(journalAccountID any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindEntries", reflect.TypeOf((*MockAccountUseCase)(nil).FindEntries), journalAccountID)
 }
 
-// Transact mocks base method.
-func (m *MockAccountUseCase) Transact(fromAccountID, toAccountID string, amount money.Money) error {
+// FindUserAccount mocks base method.
+func (m *MockAccountUseCase) FindUserAccount(userID int) (*journal.Account, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Transact", fromAccountID, toAccountID, amount)
+	ret := m.ctrl.Call(m, "FindUserAccount", userID)
+	ret0, _ := ret[0].(*journal.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserAccount indicates an expected call of FindUserAccount.
+func (mr *MockAccountUseCaseMockRecorder) FindUserAccount(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserAccount", reflect.TypeOf((*MockAccountUseCase)(nil).FindUserAccount), userID)
+}
+
+// Transact mocks base method.
+func (m *MockAccountUseCase) Transact(fromUserID, toUserID int, amount money.Money) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Transact", fromUserID, toUserID, amount)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Transact indicates an expected call of Transact.
-func (mr *MockAccountUseCaseMockRecorder) Transact(fromAccountID, toAccountID, amount any) *gomock.Call {
+func (mr *MockAccountUseCaseMockRecorder) Transact(fromUserID, toUserID, amount any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transact", reflect.TypeOf((*MockAccountUseCase)(nil).Transact), fromAccountID, toAccountID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transact", reflect.TypeOf((*MockAccountUseCase)(nil).Transact), fromUserID, toUserID, amount)
 }

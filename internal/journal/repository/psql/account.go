@@ -19,7 +19,7 @@ func (r *psqlJournalAccountRepository) Create(id string, m money.Money) error {
 		INSERT INTO
 			journal_account(
 				id,
-				money
+				balance
 			)
 		VALUES(
 			$1,
@@ -49,6 +49,32 @@ func (r *psqlJournalAccountRepository) GetByID(id string) (*journal.Account, err
 			id=$1
 	`
 	row := r.conn.QueryRow(query, id)
+	var account journal.Account
+	var moneyCents int
+	err := row.Scan(
+		&account.ID,
+		&account.CreatedAt,
+		&moneyCents,
+	)
+	account.Balance = money.FromCents(moneyCents)
+	if err != nil {
+		return nil, err
+	}
+	return &account, nil
+}
+
+func (r *psqlJournalAccountRepository) GetByUserID(userID int) (*journal.Account, error) {
+	query := `
+		SELECT
+			id,
+			created_at,
+			balance
+		FROM
+			journal_account
+		WHERE
+			user_id=$1
+	`
+	row := r.conn.QueryRow(query, userID)
 	var account journal.Account
 	var moneyCents int
 	err := row.Scan(

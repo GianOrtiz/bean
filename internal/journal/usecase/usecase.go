@@ -13,14 +13,15 @@ type journalAccountUseCase struct {
 	db                       db.DBConn
 }
 
-func NewJournalAccountUseCase(journalAccountRepository journal.AccountRepository, journalEntryRepository journal.EntryRepository) journal.AccountUseCase {
+func NewJournalAccountUseCase(journalAccountRepository journal.AccountRepository, journalEntryRepository journal.EntryRepository, db db.DBConn) journal.AccountUseCase {
 	return &journalAccountUseCase{
 		journalAccountRepository: journalAccountRepository,
 		journalEntryRepository:   journalEntryRepository,
+		db:                       db,
 	}
 }
 
-func (uc *journalAccountUseCase) Transact(fromAccountID string, toAccountID string, amount money.Money) (err error) {
+func (uc *journalAccountUseCase) Transact(fromUserID, toUserID int, amount money.Money) (err error) {
 	dbTx, err := uc.db.Begin()
 	if err != nil {
 		return err
@@ -36,12 +37,12 @@ func (uc *journalAccountUseCase) Transact(fromAccountID string, toAccountID stri
 	uc.journalAccountRepository.EnableTransaction(dbTx)
 	uc.journalEntryRepository.EnableTransaction(dbTx)
 
-	fromAccount, err := uc.findJournalAccountOrCreate(fromAccountID)
+	fromAccount, err := uc.findJournalAccountOrCreateByUserID(fromUserID)
 	if err != nil {
 		return err
 	}
 
-	toAccount, err := uc.findJournalAccountOrCreate(toAccountID)
+	toAccount, err := uc.findJournalAccountOrCreateByUserID(toUserID)
 	if err != nil {
 		return err
 	}
@@ -50,11 +51,11 @@ func (uc *journalAccountUseCase) Transact(fromAccountID string, toAccountID stri
 	toAccount.Balance = money.Plus(toAccount.Balance, amount)
 
 	fromAccountEntry := journal.Entry{
-		JournalAccountID: fromAccountID,
+		JournalAccountID: fromAccount.ID,
 		Amount:           money.Negative(amount),
 	}
 	toAccountEntry := journal.Entry{
-		JournalAccountID: toAccountID,
+		JournalAccountID: toAccount.ID,
 		Amount:           amount,
 	}
 	transactionID := uuid.NewString()
@@ -84,6 +85,10 @@ func (uc *journalAccountUseCase) Transact(fromAccountID string, toAccountID stri
 	return nil
 }
 
+func (uc *journalAccountUseCase) FindUserAccount(userID int) (*journal.Account, error) {
+	return uc.journalAccountRepository.GetByUserID(userID)
+}
+
 func (uc *journalAccountUseCase) FindEntries(journalAccountID string) ([]*journal.Entry, error) {
 	_, err := uc.journalAccountRepository.GetByID(journalAccountID)
 	if err != nil {
@@ -97,9 +102,10 @@ func (uc *journalAccountUseCase) FindEntries(journalAccountID string) ([]*journa
 	return entries, nil
 }
 
-func (uc *journalAccountUseCase) findJournalAccountOrCreate(journalAccountID string) (*journal.Account, error) {
-	fromAccount, err := uc.journalAccountRepository.GetByID(journalAccountID)
+func (uc *journalAccountUseCase) findJournalAccountOrCreateByUserID(userID int) (*journal.Account, error) {
+	fromAccount, err := uc.journalAccountRepository.GetByUserID(userID)
 	if err != nil {
+		journalAccountID := uuid.NewString()
 		if err := uc.journalAccountRepository.Create(journalAccountID, money.FromCents(0)); err != nil {
 			return nil, err
 		}
